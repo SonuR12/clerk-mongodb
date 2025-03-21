@@ -1,7 +1,11 @@
+import { connect } from "@/lib/db/db";
+import User from "@/lib/modals/user.modal";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  await connect(); // Connect to MongoDB
+
   const { userId } = auth();
   const user = await currentUser();
 
@@ -9,14 +13,28 @@ export async function GET() {
     return NextResponse.json({ message: "Not Authenticated" }, { status: 401 });
   }
 
-  const data = {
+  const userData = {
     clerkId: userId,
-    username: user?.username || `${user?.firstName} ${user?.lastName}` || "Guest", 
+    username: user?.username || `${user?.firstName} ${user?.lastName}` || "Guest",
     email: user?.emailAddresses[0]?.emailAddress || "N/A",
     photo: user?.imageUrl || "N/A",
   };
 
-  // console.log('Auth data:', data);
+  try {
+    // Check if user already exists
+    const existingUser = await User.findOne({ clerkId: userId });
 
-  return NextResponse.json({ message: "Authenticated", data},{ status: 200 });
+    if (!existingUser) {
+      // Save new user
+      await User.create(userData);
+      console.log("New user saved:", userData);
+    } else {
+      console.log("User already exists:", existingUser);
+    }
+
+    return NextResponse.json({ message: "Authenticated", data: userData }, { status: 200 });
+  } catch (error) {
+    console.error("Database Error:", error);
+    return NextResponse.json({ message: "Database Error" }, { status: 500 });
+  }
 }

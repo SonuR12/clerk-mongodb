@@ -16,7 +16,7 @@ export async function GET() {
     photo: user?.imageUrl || "N/A",
   };
 
-  // console.log('Auth data:', data);
+  console.log('Auth data:', data);
 
   return NextResponse.json({ message: "Authenticated", data},{ status: 200 });
 }

@@ -14,38 +14,35 @@ export async function GET() {
     return NextResponse.json({ message: "Not Authenticated" }, { status: 401 });
   }
 
-  const data = {
-    message: "Authenticated",
-    data: { 
-      userId: userId,
-      username: user?.username || `${user?.firstName} ${user?.lastName}` || "Guest",
-      email: user?.emailAddresses[0].emailAddress || "N/A",
-      image_url: user?.imageUrl || "N/A" 
-    }
+  const userData = {
+    clerkId: userId,
+    username: user?.username || `${user?.firstName} ${user?.lastName}` || "Guest",
+    email: user?.emailAddresses[0]?.emailAddress || "N/A",
+    photo: user?.imageUrl || "N/A",
   };
 
-  console.log("Response Data:", data);
+  console.log("User Data:", userData);
 
   try {
     // Connect to the database
     await connect();
 
-    // Save the data to the database
-    await User.create({
-      clerkId: data.data.userId,
-      email: data.data.email,
-      // username: data.data.username,
-      username: user?.username || `${user?.firstName} ${user?.lastName}` || "Guest",
-      photo: data.data.image_url,
-      // firstName: user?.firstName || "",
-      // lastName: user?.lastName || "",
-    });
+    // Save or update user data in MongoDB
+    const savedUser = await User.findOneAndUpdate(
+      { clerkId: userData.clerkId },
+      userData,
+      { upsert: true, new: true } // Create if not exists, return updated/new doc
+    );
 
-    console.log("Data saved to MongoDB");
+    console.log("Data saved to MongoDB:", savedUser);
+
+    return NextResponse.json({
+      message: "Data saved successfully",
+      data: savedUser,
+    }, { status: 200 });
+
   } catch (error) {
     console.error("Error saving data to MongoDB:", error);
     return NextResponse.json({ message: "Error saving data" }, { status: 500 });
   }
-
-  return NextResponse.json(data, { status: 200 });
 }

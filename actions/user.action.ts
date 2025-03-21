@@ -1,7 +1,7 @@
 "use server";
 
-import User from "@/modals/user.modal";
-import { connect } from "@/db";
+import User from "@/lib/modals/user.modal";
+import { connect } from "@/lib/db/db";
 
 export async function createUser(user: any) {
   try {

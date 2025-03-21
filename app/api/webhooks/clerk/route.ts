@@ -81,7 +81,44 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ message: "New user created", user: newUser });
+  } else if (eventType === "user.updated") {
+    const { id, email_addresses, image_url, first_name, last_name, username } =
+      evt.data;
+
+    const updatedUser = {
+      email: email_addresses[0].email_address,
+      username: username!,
+      photo: image_url!,
+      firstName: first_name,
+      lastName: last_name,
+    };
+
+    console.log("Updating user:", updatedUser);
+
+    // Update user logic here (e.g., update in database)
+    // await updateUserInDatabase(id, updatedUser);
+
+    return NextResponse.json({ message: "User updated", user: updatedUser });
+  } else if (eventType === "user.deleted") {
+    const { id } = evt.data;
+
+    console.log("Deleting user with Clerk ID:", id);
+
+    // Delete user logic here (e.g., remove from database)
+    // await deleteUserFromDatabase(id);
+
+    return NextResponse.json({ message: "User deleted", clerkId: id });
+  } else if (eventType === "session.created") {
+    const { id, user_id } = evt.data;
+
+    console.log("New session created:", { sessionId: id, userId: user_id });
+
+    // Handle session creation logic here
+    // await handleSessionCreation(id, user_id);
+
+    return NextResponse.json({ message: "Session created", sessionId: id });
   }
+
   console.log(`Webhook with and ID of ${id} and type of ${eventType}`);
   console.log("Webhook body:", body);
 
